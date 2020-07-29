@@ -9,7 +9,6 @@ phases:
      - apt-get install -y maven
      - echo Entered the build phase...
      - echo Build started on `date`
-     - mvn install
      - mvn clean package -DskipTests=true
      
   pre_build:
