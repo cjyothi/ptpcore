@@ -4,5 +4,5 @@ FROM openjdk:8-jdk-alpine
 ARG JAR_FILE=target/*.jar
 
 COPY ${JAR_FILE} /usr/app.jar
-COPY ./application.properties /usr/application.properties
+COPY config/application.properties /usr/application.properties
 ENTRYPOINT ["java","-jar","/usr/app.jar", "./application.properties"]
