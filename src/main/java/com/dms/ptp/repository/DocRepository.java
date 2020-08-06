@@ -1,0 +1,17 @@
+package com.dms.ptp.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.dms.ptp.entity.DocDetail;
+
+@Repository
+public interface DocRepository extends JpaRepository<DocDetail, Integer>{
+    
+    @Query(value = "select * from doc_detail c where c.folder_name =?1", nativeQuery = true)
+    List<DocDetail> findTypeByFolderName(String folderName);
+
+}
