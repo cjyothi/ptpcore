@@ -26,6 +26,7 @@ public class CatalogPricingDTO {
     private List<SalesAreaDTO> salesAreaList;
 
     private List<DaypartDTO> daypart;
+    private List<WeekpartDTO> weekpart;
 
 
 }

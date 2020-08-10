@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import com.dms.ptp.dto.AvailLMKRequest;
 import com.dms.ptp.dto.CampaignApproveReject;
 import com.dms.ptp.dto.CampaignList;
 import com.dms.ptp.dto.CampaignRequest;
+import com.dms.ptp.dto.PageDecorator;
 import com.dms.ptp.dto.TargetMarketPkgReq;
 import com.dms.ptp.dto.UpdateCampaignRequest;
 import com.dms.ptp.entity.Campaign;
@@ -42,6 +45,7 @@ import com.dms.ptp.response.TargetMarketLMKResp;
 import com.dms.ptp.response.UpdateCampaignResponse;
 import com.dms.ptp.service.CampaignService;
 
+import io.github.perplexhub.rsql.RSQLJPASupport;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
@@ -126,6 +130,28 @@ public class CampaignController {
         }
         return ResponseEntity.status(400).body(responseList);
     }
+    
+    @CrossOrigin
+	@ApiOperation(value = "REST API to fetch fetching Campaign list by status")
+	@RequestMapping(value = "/status/{status}", method = RequestMethod.GET)
+	public ResponseEntity<CampaignList> getCampaignInfo(@PathVariable int status,
+			@RequestParam(required = false, defaultValue = "desc") String sortdir,
+			@RequestHeader(name = "Authorization") String token, @PageableDefault() Pageable pageable) {
+
+		log.info("inside CampaignController: getCampaignInfo");
+		CampaignList responseList = null;
+
+		if (sortdir.equals("asc") || sortdir.equals("desc")) {
+			try {
+				responseList = campaignService.getCampaignInfo(status, sortdir, pageable, token);
+				return ResponseEntity.status(200).body(responseList);
+			} catch (Exception ex) {
+				log.error("Error fetching campaign info: " + ex.getMessage());
+			}
+			return ResponseEntity.status(400).body(responseList);
+		}
+		return ResponseEntity.status(400).body(responseList);
+	}
 
     @CrossOrigin
     @ApiOperation(value = "REST API for fetching Campaign list")
@@ -278,7 +304,18 @@ public class CampaignController {
 	public ResponseEntity<byte[]> getOrderConfirmationFormLMK(@RequestParam("campaignCode") Integer campaignCode,
 			@RequestParam("type") String type, HttpServletResponse httpServletResponse) throws IOException {
 		log.info("inside CampaignController: getOrderConfirmationFormLMK");
+		String message;
+		if (type.equals("") || type.equals("undefined")) {
+			message = "Type Can not be empty or null or undefined";
+			return ResponseEntity.badRequest().contentLength(message.length())
+					.header("Content-type", "application/octet-stream").body(message.getBytes());
+		}
+		if (campaignCode == null || campaignCode < 0) {
+			message = "CampaignCode Can not be empty or null or negative";
+			return ResponseEntity.badRequest().contentLength(message.length())
+					.header("Content-type", "application/octet-stream").body(message.getBytes());
 
+		}
 		ResponseEntity<byte[]> response = campaignService.getOrderConfirmation(campaignCode, type);
 		File file = new File(campaignCode + ".pdf");
 		return ResponseEntity.ok().contentLength(response.getBody().length)
@@ -286,6 +323,17 @@ public class CampaignController {
 				.header("Content-disposition", "attachment; filename=\"" + file.getName() + "\"")
 				.body(response.getBody());
 
+	}
+	
+	@CrossOrigin
+	@ApiOperation(value = "REST API to filter Campaign")
+	@RequestMapping(value = "/search", method = RequestMethod.GET)
+	public PageDecorator<Campaign> getLengthFactor(@RequestParam(name = "filter", required = true) String filter,
+			Pageable pageable, HttpServletResponse response) {
+
+		Page<Campaign> page = campaignService.getCampaignDetail(RSQLJPASupport.toSpecification(filter),
+				PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()));
+		return new PageDecorator<>(page);
 	}
 
 }

@@ -3,13 +3,14 @@ package com.dms.ptp.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.dms.ptp.entity.Campaign;
 
 @Repository
-public interface CampaignRepository extends JpaRepository<Campaign, Integer>{
+public interface CampaignRepository extends JpaRepository<Campaign, Integer>, JpaSpecificationExecutor<Campaign>{
 
 
     @Query(value = "select * from campaign c order by c.portal_id desc", nativeQuery = true)

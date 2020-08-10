@@ -91,6 +91,9 @@ public class Items {
 
     @Column(name = "tvr")
     private int tvr;
+    
+    @Column(name = "price")
+    private double price;
 
     @Column(name = "business_type")
     private int business_type;
@@ -115,6 +118,10 @@ public class Items {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "item_id", referencedColumnName = "id") 
     private List<CampaignSalesArea> salesAreaOnCampaign;
+    
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "item_id", referencedColumnName = "id")
+    private List<PackageAudienceForecast> demos;
 
     public int getId() {
         return id;

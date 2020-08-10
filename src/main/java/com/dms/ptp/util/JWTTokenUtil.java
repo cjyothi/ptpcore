@@ -49,6 +49,7 @@ public class JWTTokenUtil {
 		  .signWith(SignatureAlgorithm.HS512, signatureKeyBytes) 
 		  .claim("id", user.getId())
 		  .claim("role", user.getJobRole())
+		  .claim("roleId", user.getRoleId())
 		  .setIssuedAt(new Date(System.currentTimeMillis()))
 		  .setExpiration(getExpirationTime())
 		  .compact();
@@ -74,6 +75,7 @@ public class JWTTokenUtil {
 		User user = new User();
 		user.setId(Integer.valueOf(claims.getSubject()));
 		user.setJobRole((String) claims.get("role"));
+		user.setRoleId((Integer) claims.get("roleId"));
 
 		return user;
 	}
@@ -99,10 +101,12 @@ public class JWTTokenUtil {
         JSONObject obj = new JSONObject(body);
         int userId = (int) obj.get("id");
         String userRole = (String) obj.get("role");
-        logger.info("userId: "+userId + " userRole: "+userRole );
+        int roleId = (int) obj.get("roleId");
+        logger.info("userId: "+userId + " userRole: "+userRole + " roleId: " +roleId);
         
         response.setUserId(userId);
         response.setUserRole(userRole);
+        response.setRoleId(roleId);
         return response;
     }
 }

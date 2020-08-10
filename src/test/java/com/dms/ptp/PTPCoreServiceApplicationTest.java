@@ -2923,4 +2923,36 @@ private List<Catalog> createCatalog(){
         cList.add(c);
         return cList;
         }
+
+        @Test
+    public void getAllCatalogTest() {
+        CatalogResponse mockResp = catalogMockResp();
+        Mockito.when(catalogService.getAllCatalog(any(),any())).thenReturn(mockResp);
+        ResponseEntity<CatalogResponse> actualRespEntity = catalogController.getAllCatalog("",PageRequest.of(1, 1, Sort.by("id") ));
+        CatalogResponse actualResp = actualRespEntity.getBody();
+        assertNotNull(actualResp);
+        assertEquals(mockResp, actualResp);
+    }
+
+	@Test
+    public void deleteCatalogByIdTest() {
+        Map<String,Object> mockResp = deleteCatalogResp();
+        Mockito.when(catalogService.deleteCatalogById(5)).thenReturn(mockResp);
+        Map<String, Object> actualRespEntity = catalogController.deleteCatalogById(5);
+        assertNotNull(actualRespEntity);
+        assertEquals(mockResp, actualRespEntity);
+    }
+
+    @Test(expected = CatalogNotFoundException.class)
+    public void deleteCatalogNotFoundErrorTest() {
+        Mockito.when(catalogService.deleteCatalogById(100)).thenThrow(CatalogNotFoundException.class);
+        catalogController.deleteCatalogById(100);
+    }
+
+    private Map<String, Object> deleteCatalogResp() {
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("status", Boolean.TRUE);
+        resp.put("Message", Constant.DELETED_SUCCESSFULLY);
+        return resp;
+     }
         */

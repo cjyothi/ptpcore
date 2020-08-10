@@ -4,6 +4,7 @@ public class JWTExtract {
     
     private int userId;
     private String userRole;
+    private int roleId;
     
     public int getUserId() {
         return userId;
@@ -17,5 +18,11 @@ public class JWTExtract {
     public void setUserRole(String userRole) {
         this.userRole = userRole;
     }
+	public int getRoleId() {
+		return roleId;
+	}
+	public void setRoleId(int roleId) {
+		this.roleId = roleId;
+	}
 
 }

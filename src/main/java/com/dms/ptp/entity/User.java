@@ -60,6 +60,9 @@ public class User {
     @Column(name = "job_role")
     private String jobRole;
     
+    @Column(name = "role_id")
+    private Integer roleId;
+    
     @Column(name = "last_verified_on")
     private LocalDateTime lastVerifiedOn;
 
@@ -191,6 +194,14 @@ public class User {
 
 	public void setLastVerifiedOn(LocalDateTime lastVerifiedOn) {
 		this.lastVerifiedOn = lastVerifiedOn;
+	}
+
+	public Integer getRoleId() {
+		return roleId;
+	}
+
+	public void setRoleId(Integer roleId) {
+		this.roleId = roleId;
 	}
 	
 }

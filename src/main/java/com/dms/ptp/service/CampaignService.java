@@ -4,7 +4,9 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 
 import com.dms.ptp.dto.CampaignList;
@@ -32,4 +34,5 @@ public interface CampaignService {
 	TargetMarketLMKResp getTargetMarketDetailsPackage(TargetMarketPkgReq multipleTargetMarketReq)
 			throws InvalidParamException;
 	ResponseEntity<byte[]> getOrderConfirmation(Integer campaignCode, String type);
+	public Page<Campaign> getCampaignDetail(Specification t, Pageable p);
 }

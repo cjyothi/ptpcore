@@ -22,7 +22,12 @@ public class SCSplitByDaypart {
     public SCSplitByDaypart() {
         super();
     }
-    
+
+    public SCSplitByDaypart(String dayPart, int percentage) {
+        this.dayPart=dayPart;
+        this.percentage=percentage;
+    }
+
     @Override
     public String toString() {
         return "SCSplitByDaypart [dayPart=" + dayPart + ", percentage=" + percentage + "]";

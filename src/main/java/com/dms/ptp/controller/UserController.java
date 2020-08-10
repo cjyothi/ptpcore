@@ -3,9 +3,13 @@ package com.dms.ptp.controller;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -34,6 +38,7 @@ import com.dms.ptp.response.UserLoginResponse;
 import com.dms.ptp.service.UserService;
 import com.dms.ptp.util.Constant;
 
+import io.github.perplexhub.rsql.RSQLJPASupport;
 import io.swagger.annotations.ApiOperation;
 import reactor.core.publisher.Flux;
 
@@ -178,5 +183,16 @@ public class UserController {
             log.error("Error getting user {}", ex.getMessage());
         }
         return ResponseEntity.notFound().build();
+    }
+	
+	@CrossOrigin
+    @ApiOperation(value = "REST API to filter Campaign")
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
+    public PageDecorator<User> getLengthFactor(@RequestParam(name = "name", required = true) String name,
+            Pageable pageable, HttpServletResponse response) {
+		String filter = "firstName==" +name + "," +"lastName==" +name;
+        Page<User> page = userService.getUserDetail(RSQLJPASupport.toSpecification(filter),
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()));
+        return new PageDecorator<>(page);
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 public class SpotChannels {
     
     private int channelId;
+    private int catalogId;
     private String affinity;
     private String bouquet;
     private String name;
@@ -28,6 +29,15 @@ public class SpotChannels {
     public void setChannelId(int channelId) {
         this.channelId = channelId;
     }
+
+    public int getCatalogId() {
+        return catalogId;
+    }
+
+    public void setCatalogId(int catalogId) {
+        this.catalogId=catalogId;
+    }
+
     public String getAffinity() {
         return affinity;
     }
@@ -103,13 +113,24 @@ public class SpotChannels {
     public SpotChannels() {
         super();
     }
+
     @Override
     public String toString() {
-        return "SpotChannels [channelId=" + channelId + ", affinity=" + affinity + ", bouquet=" + bouquet + ", name="
-                + name + ", looseSpotYOY=" + looseSpotYOY + ", looseSpotQOQ=" + looseSpotQOQ + ", looseSpotNew="
-                + looseSpotNew + ", demoDetail=" + demoDetail + ", packageDetail=" + packageDetail + ", estRating="
-                + estRating + ", estAudience=" + estAudience + ", estCPP=" + estCPP + ", estCPT=" + estCPT + "]";
+        return "SpotChannels{" +
+                "channelId=" + channelId +
+                ", catalogId=" + catalogId +
+                ", affinity='" + affinity + '\'' +
+                ", bouquet='" + bouquet + '\'' +
+                ", name='" + name + '\'' +
+                ", looseSpotYOY=" + looseSpotYOY +
+                ", looseSpotQOQ=" + looseSpotQOQ +
+                ", looseSpotNew=" + looseSpotNew +
+                ", demoDetail=" + demoDetail +
+                ", packageDetail=" + packageDetail +
+                ", estRating=" + estRating +
+                ", estAudience=" + estAudience +
+                ", estCPP=" + estCPP +
+                ", estCPT=" + estCPT +
+                '}';
     }
-    
-    
 }

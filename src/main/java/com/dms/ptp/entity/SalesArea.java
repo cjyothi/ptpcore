@@ -21,6 +21,6 @@ public class SalesArea {
 	private String name;
 	private int spots;
 	@Column(name="channel_num")
-	private int channelNum;
+	private Integer channelNum;
 
 }

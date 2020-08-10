@@ -21,5 +21,8 @@ public interface ChannelDemoRepository extends JpaRepository<Channel, Integer> {
 
 	@Query(value = "select c.id from channel c where c.lmkrefno=?1", nativeQuery = true)
 	int findByChannelId(int lref);
+	
+	@Query(value = "select c.lmkrefno from channel c where c.id=?1", nativeQuery = true)
+	int findByChId(int lref);
 
 }

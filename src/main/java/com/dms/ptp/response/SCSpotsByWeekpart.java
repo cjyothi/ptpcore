@@ -28,7 +28,13 @@ public class SCSpotsByWeekpart {
     public SCSpotsByWeekpart() {
         super();
     }
-    
+
+    public SCSpotsByWeekpart(String weekPart, String dayPart, int spots) {
+        this.weekPart=weekPart;
+        this.dayPart=dayPart;
+        this.spots=spots;
+    }
+
     @Override
     public String toString() {
         return "SCSpotsByWeekpart [weekPart=" + weekPart + ", dayPart=" + dayPart + ", spots=" + spots + "]";

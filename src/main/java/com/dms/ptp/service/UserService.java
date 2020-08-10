@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.dms.ptp.entity.User;
 import com.dms.ptp.exception.InvalidLoginCredentialsException;
@@ -32,4 +33,5 @@ public interface UserService {
 	public String editUserDetails(SignUpRequestModel signUpRequest, int status, String token);
 	public List<Role> getRoleList();
 	public UserApprovalResponse editUserStatus(SignUpRequestModel signUpRequest, String action, String token);
+	public Page<User> getUserDetail(Specification t, Pageable p);
 }

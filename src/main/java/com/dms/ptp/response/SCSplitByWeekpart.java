@@ -22,7 +22,12 @@ public class SCSplitByWeekpart {
     public SCSplitByWeekpart() {
         super();
     }
-    
+
+    public SCSplitByWeekpart(String weekPart, int percentage) {
+        this.weekPart=weekPart;
+        this.percentage=percentage;
+    }
+
     @Override
     public String toString() {
         return "SCSplitByWeekpart [weekPart=" + weekPart + ", percentage=" + percentage + "]";

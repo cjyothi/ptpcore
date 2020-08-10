@@ -20,7 +20,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -213,9 +215,8 @@ public class UserServiceImpl implements UserService {
 					}
 				}
 				userRepo.save(user);
-				
 			} else {
-				message = "Request cannot be processed. Not an admin user";
+				message = "Request cannot be processed. Not an admin user.";
 				response.setMessage(message);
 				response.setRespFlag(false);
 				response.setStatus(HttpStatus.BAD_GATEWAY);
@@ -248,7 +249,6 @@ public class UserServiceImpl implements UserService {
 
                 emailUtil.sendMail(signUpRequest.getUsername(), flag, signUpRequest.getReason());
                 message = Constant.USER_APPROVAL_REJECT + " Reason: " + signUpRequest.getReason();
-
             }
         } catch (Exception e) {
             e.getMessage();
@@ -265,10 +265,13 @@ public class UserServiceImpl implements UserService {
         /** status-> 0:pending, 1:active, 3:suspended **/
         if (user1.getStatus() == 0) {
             loginResponse.setStatus(HttpStatus.UNAUTHORIZED);
-            loginResponse.setMessage("Cannot login. User id: " + user1.getEmail() + " is not approved");
-        } else if (user1.getStatus() == 3) {
+            loginResponse.setMessage("Sorry! Cannot login. User id: " + user1.getEmail() + " is not approved.");
+        } else if (user1.getStatus() == 2) {
+    		loginResponse.setStatus(HttpStatus.UNAUTHORIZED);
+    		loginResponse.setMessage("Sorry! Cannot Login. User id: " + user1.getEmail() + " is rejected.");
+    	} else if (user1.getStatus() == 3) {
             loginResponse.setStatus(HttpStatus.UNAUTHORIZED);
-            loginResponse.setMessage("Cannot login. User id: " + user1.getEmail() + " is suspended");
+            loginResponse.setMessage("Sorry! Cannot login. User id: " + user1.getEmail() + " is suspended.");
         } else {
             String sha1 = "";
             try {
@@ -289,58 +292,66 @@ public class UserServiceImpl implements UserService {
 
             final User user;
             if ((user = userRepo.findByEmailAndPassword(signInRequest.getUsername(), password)) != null) {
-                logger.info(user.toString());
+            	logger.info(user.toString());
 
-              //TRP-2211 change starts
-				String otp = "";
-				int userId = 0;
-				boolean verify = false;
+            	//TRP-2211 change starts
+            	String otp = "";
+            	int userId = 0;
+            	boolean verify = false;
 
-				long days = getDifferenceDays(user.getLastVerifiedOn(), LocalDateTime.now());
+            	long days = 0;
+            	if (user.getLastVerifiedOn() == null) {
+            		user.setLastVerifiedOn(LocalDateTime.MIN);
+            		days = getDifferenceDays(user.getLastVerifiedOn(), LocalDateTime.now());
+            	} else {
+            		days = getDifferenceDays(user.getLastVerifiedOn(), LocalDateTime.now());
+            	}
 
-				if(days <= 30) {
-					verify = false;
+            	//long days = getDifferenceDays(user.getLastVerifiedOn(), LocalDateTime.now());
 
-					//generate token
-					String jsonWebToken = jwtUtil.getToken(user);
-					loginResponse.setAccessToken(jsonWebToken);
-					loginResponse.setVerify(verify);
-					loginResponse.setMessage("OTP not required");
+            	if(days <= 30) {
+            		verify = false;
 
-				} else {
-					otp = generateOTP();
-					userId = generateUserId();
-					verify = true;
+            		//generate token
+            		String jsonWebToken = jwtUtil.getToken(user);
+            		loginResponse.setAccessToken(jsonWebToken);
+            		loginResponse.setVerify(verify);
+            		loginResponse.setMessage("OTP not required");
 
-					user.setLastVerifiedOn(LocalDateTime.now());
-					userRepo.save(user);
+            	} else {
+            		otp = generateOTP();
+            		userId = generateUserId();
+            		verify = true;
 
-					// saving the generated otp in DynamoDB
-					boolean isValid = dynamoConfig.updateTable(userId, otp);
+            		user.setLastVerifiedOn(LocalDateTime.now());
+            		userRepo.save(user);
 
-					// send the generated otp to the user via email
-					try {
-						if (isValid) {
-							emailUtil.sendOTPMail(otp, signInRequest.getUsername());
-						}
-					} catch (MessagingException e) {
-						e.getMessage();
-					} catch (IOException e) {
-						e.getMessage();
-					} catch (TemplateException e) {
-						e.getMessage();
-					}
+            		// saving the generated otp in DynamoDB
+            		boolean isValid = dynamoConfig.updateTable(userId, otp);
 
-					loginResponse.setVerify(verify);
-					// for debug. to be removed later
-					loginResponse.setOtp(otp);
-					loginResponse.setUserid(userId);
-					loginResponse.setUserStatus(Constant.PENDING);
-				}
-				//TRP-2211 change ends
-				loginResponse.setStatus(HttpStatus.OK);
+            		// send the generated otp to the user via email
+            		try {
+            			if (isValid) {
+            				emailUtil.sendOTPMail(otp, signInRequest.getUsername());
+            			}
+            		} catch (MessagingException e) {
+            			e.getMessage();
+            		} catch (IOException e) {
+            			e.getMessage();
+            		} catch (TemplateException e) {
+            			e.getMessage();
+            		}
+
+            		loginResponse.setVerify(verify);
+            		// for debug. to be removed later
+            		loginResponse.setOtp(otp);
+            		loginResponse.setUserid(userId);
+            		loginResponse.setUserStatus(Constant.PENDING);
+            	}
+            	//TRP-2211 change ends
+            	loginResponse.setStatus(HttpStatus.OK);
             } else {
-                throw new InvalidLoginCredentialsException(Constant.INVALID_LOGIN_CREDENTIALS);
+            	throw new InvalidLoginCredentialsException(Constant.INVALID_LOGIN_CREDENTIALS);
             }
         }
         return loginResponse;
@@ -354,7 +365,7 @@ public class UserServiceImpl implements UserService {
 
     public UserLoginResponse verifyotp(int userid, int otp, UserLoginRequest signInRequest) {
         logger.info("Inside UserServiceImpl: verifyotp");
-        UserLoginResponse loggerinResponse = new UserLoginResponse();
+        UserLoginResponse loginResponse = new UserLoginResponse();
 
         User user1 = userRepo.findByEmail(signInRequest.getUsername());
         String sha1 = "";
@@ -382,49 +393,56 @@ public class UserServiceImpl implements UserService {
             JWTExtract jwtExtract = jwtUtil.getIdRoleFromToken(jsonWebToken);
             logger.info("userid: " + jwtExtract.getUserId() + " userRole: " + jwtExtract.getUserRole());
 
-            loggerinResponse.setAccessToken(jsonWebToken);
-            loggerinResponse.setAgencyCode(user1.getAgencyCode());
-            loggerinResponse.setAgencyName(user1.getAgencyName());
-            loggerinResponse.setStatus(HttpStatus.OK);
-            loggerinResponse.setOtpMessage(Constant.VALID_OTP);
-            loggerinResponse.setMessage(Constant.VALID_LOGIN);
+            loginResponse.setAccessToken(jsonWebToken);
+            loginResponse.setAgencyCode(user1.getAgencyCode());
+            loginResponse.setAgencyName(user1.getAgencyName());
+            loginResponse.setStatus(HttpStatus.OK);
+            loginResponse.setOtpMessage(Constant.VALID_OTP);
+            loginResponse.setMessage(Constant.VALID_LOGIN);
         } else {
-            loggerinResponse.setStatus(HttpStatus.BAD_REQUEST);
-            loggerinResponse.setOtpMessage(Constant.INVALID_OTP);
-            loggerinResponse.setMessage(Constant.INVALID_LOGIN);
+            loginResponse.setStatus(HttpStatus.BAD_REQUEST);
+            loginResponse.setOtpMessage(Constant.INVALID_OTP);
+            loginResponse.setMessage(Constant.INVALID_LOGIN);
         }
-        return loggerinResponse;
+        return loginResponse;
     }
 
     public Flux<String> getAgencyList() {
-        /*
-         * String hostname = env.getProperty("lmkserver.address"); String port =
-         * env.getProperty("lmkserver.port");
-         * 
-         * final String url = "http://" + hostname + ":" + port +
-         * "/LMKServices/clients";
-         */
-        logger.info("Inside UserServiceImpl: getAgencyList ");
-        final String url = "https://dmsbookingportaluat.multichoice.co.za/LMKServices/clients";
+    	/**LMK url is commented. keeping for reference. Plz do not remove**/
+    	// final String url = "http://" + env.getProperty("lmkserver.address") + ":" +
+    	// env.getProperty("lmkserver.port") + "/LMKServices/clients";
 
-        return this.webClientForUser.get().uri(url).exchange()
-                .flatMapMany(clientResponse -> clientResponse.bodyToFlux(String.class));
+    	log.info("Inside UserServiceImpl: getAdvertisersForAgency ");
+    	Flux<String> response = null;
+    	try {
+    		final String url = "https://dmsbookingportaluat.multichoice.co.za/LMKServices/clients";
+    		response = this.webClientForUser.get().uri(url).exchange()
+    				.flatMapMany(clientResponse -> clientResponse.bodyToFlux(String.class));
+    	} catch (Exception e) {
+    		response.onErrorReturn(e.getMessage());
+    		response.log(e.getMessage());
+    	}
+    	return response;
     }
 
     public Flux<String> getAdvertisersForAgency(String agencyCode) {
-        /*
-         * String hostname = env.getProperty("lmkserver.address"); String port =
-         * env.getProperty("lmkserver.port");
-         * 
-         * final String url = "http://" + hostname + ":" + port +
-         * "/CariaServices/agency/" + agencyCode + "/advertisers";
-         */
-        logger.info("Inside UserServiceImpl: getAdvertisersForAgency ");
-        String url = "https://dmsbookingportaluat.multichoice.co.za/CariaServices/agency/" + agencyCode
-                + "/advertisers";
+    	/**LMK url is commented. keeping for reference. Plz do not remove**/
+    	// final String url = "http://" + env.getProperty("lmkserver.address") + ":" +
+    	// env.getProperty("lmkserver.port") + "/CariaServices/agency/" + agencyCode +
+    	// "/advertisers";
 
-        return this.webClientForUser.get().uri(url).exchange()
-                .flatMapMany(clientResponse -> clientResponse.bodyToFlux(String.class));
+    	log.info("Inside UserServiceImpl: getProductsForAdvertisers ");
+    	Flux<String> response = null;
+    	try {
+    		final String url = "https://dmsbookingportaluat.multichoice.co.za/CariaServices/agency/" + agencyCode
+    				+ "/advertisers";
+    		response = this.webClientForUser.get().uri(url).exchange()
+    				.flatMapMany(clientResponse -> clientResponse.bodyToFlux(String.class));
+    	} catch (Exception e) {
+    		response.onErrorReturn(e.getMessage());
+    		response.log(e.getMessage());
+    	}
+    	return response;
     }
 
     public Page<User> getUserInfo(int status, Pageable pageable) throws UserNotFoundException {
@@ -453,6 +471,19 @@ public class UserServiceImpl implements UserService {
         Page<User> userInfoList = userRepo.findAll(pageable);
         return userInfoList;
     }
+    
+    /**
+     * This method return the User list filter by first_name and last_name
+     */
+    @Override
+    public Page<User> getUserDetail(Specification t, Pageable p) {
+    	Page<User> campPage = userRepo.findAll(t, p);
+    	List<User> campList = campPage.getContent();
+    	Page<User> page = new PageImpl(campList, p, 1L);
+    	return page;
+    }
+    
+    
 
     /**
      * User validation for Username: if signUpRequestname already exists, throw

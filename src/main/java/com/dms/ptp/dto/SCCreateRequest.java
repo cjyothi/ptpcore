@@ -1,9 +1,12 @@
 package com.dms.ptp.dto;
 
+import com.dms.ptp.response.SpotChannels;
+
 import java.util.List;
 
-public class SpotChannelRequest {
+public class SCCreateRequest {
     
+    private int rateCardId;
     private String component;
     private int baseline1;
     private int baseline2;
@@ -16,14 +19,20 @@ public class SpotChannelRequest {
     private int yoyBaseline2;
     private int week;
     private int spotLength;
-    private List<CatalogDetail> catalogDetail;
+    private List<SpotChannels> channels;
     
     
+    public int getRateCardId() {
+        return rateCardId;
+    }
+    public void setRateCardId(int rateCardId) {
+        this.rateCardId = rateCardId;
+    }
     public String getComponent() {
         return component;
     }
     public void setComponent(String component) {
-        this.component=component;
+        this.component = component;
     }
     public int getBaseline1() {
         return baseline1;
@@ -91,35 +100,21 @@ public class SpotChannelRequest {
     public void setSpotLength(int spotLength) {
         this.spotLength = spotLength;
     }
-
-    public List<CatalogDetail> getCatalogDetail() {
-        return catalogDetail;
+    public List<SpotChannels> getChannels() {
+        return channels;
     }
-
-    public void setCatalogDetail(List<CatalogDetail> catalogDetail) {
-        this.catalogDetail=catalogDetail;
+    public void setChannels(List<SpotChannels> channels) {
+        this.channels = channels;
     }
-
-    public SpotChannelRequest() {
-        super();
-    }
-
     @Override
     public String toString() {
-        return "SpotChannelRequest{" +
-                "component='" + component + '\'' +
-                ", baseline1=" + baseline1 +
-                ", baseline2=" + baseline2 +
-                ", type='" + type + '\'' +
-                ", qoqRateCard=" + qoqRateCard +
-                ", yoyRateCard=" + yoyRateCard +
-                ", qoqBaseline1=" + qoqBaseline1 +
-                ", yoyBaseline1=" + yoyBaseline1 +
-                ", qoqBaseline2=" + qoqBaseline2 +
-                ", yoyBaseline2=" + yoyBaseline2 +
-                ", week=" + week +
-                ", spotLength=" + spotLength +
-                ", catalogDetail=" + catalogDetail +
-                '}';
+        return "SCCreateRequest [rateCardId=" + rateCardId + ", component=" + component + ", baseline1=" + baseline1
+                + ", baseline2=" + baseline2 + ", type=" + type + ", qoqRateCard=" + qoqRateCard + ", yoyRateCard="
+                + yoyRateCard + ", qoqBaseline1=" + qoqBaseline1 + ", yoyBaseline1=" + yoyBaseline1 + ", qoqBaseline2="
+                + qoqBaseline2 + ", yoyBaseline2=" + yoyBaseline2 + ", week=" + week + ", spotLength=" + spotLength
+                + ", channels=" + channels + "]";
     }
+    
+    
+    
 }

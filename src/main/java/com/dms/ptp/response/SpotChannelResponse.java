@@ -5,7 +5,7 @@ import java.util.List;
 
 public class SpotChannelResponse {
 
-    private String weekPartType;
+    private String component;
     private int baseline1;
     private int baseline2;
     private String type;
@@ -21,11 +21,11 @@ public class SpotChannelResponse {
     
     
     
-    public String getWeekPartType() {
-        return weekPartType;
+    public String getComponent() {
+        return component;
     }
-    public void setWeekPartType(String weekPartType) {
-        this.weekPartType = weekPartType;
+    public void setComponent(String component) {
+        this.component=component;
     }
     public int getBaseline1() {
         return baseline1;
@@ -104,7 +104,7 @@ public class SpotChannelResponse {
     }
     @Override
     public String toString() {
-        return "SpotChannelResponse [weekPartType=" + weekPartType + ", baseline1=" + baseline1 + ", baseline2="
+        return "SpotChannelResponse [component=" + component + ", baseline1=" + baseline1 + ", baseline2="
                 + baseline2 + ", type=" + type + ", qoqRateCard=" + qoqRateCard + ", yoyRateCard=" + yoyRateCard
                 + ", qoqBaseline1=" + qoqBaseline1 + ", yoyBaseline1=" + yoyBaseline1 + ", qoqBaseline2=" + qoqBaseline2
                 + ", yoyBaseline2=" + yoyBaseline2 + ", week=" + week + ", spotLength=" + spotLength + ", channels="

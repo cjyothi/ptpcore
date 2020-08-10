@@ -1,10 +1,15 @@
 package com.dms.ptp.entity;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -71,6 +76,10 @@ public class Spots {
     
     @Column(name = "comment")
     private String comment;
+    
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "spot_id", referencedColumnName = "id")
+    private List<SpotsAudienceForecast> demos;
     
     public int getSales_area_no() {
         return sales_area_no;
@@ -186,6 +195,18 @@ public class Spots {
     public void setComment(String comment) {
         this.comment = comment;
     }
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public List<SpotsAudienceForecast> getDemos() {
+		return demos;
+	}
+	public void setDemos(List<SpotsAudienceForecast> demos) {
+		this.demos = demos;
+	}
     
     
 }

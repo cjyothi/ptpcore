@@ -12,6 +12,8 @@ public class TargetMarketValues {
     private int impact;
     private int cpp;
     private int cpt;
+    private int demo;
+    
     public int getId() {
         return id;
     }

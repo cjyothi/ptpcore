@@ -35,6 +35,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -66,6 +67,7 @@ import com.dms.ptp.dto.ResultMessages;
 import com.dms.ptp.dto.SalesAreaLMK;
 import com.dms.ptp.dto.SalesAreaOnCampaign;
 import com.dms.ptp.dto.TargetMarketPkgReq;
+import com.dms.ptp.dto.TargetMarketValues;
 import com.dms.ptp.dto.UpdateCampaignRequest;
 import com.dms.ptp.entity.Campaign;
 import com.dms.ptp.entity.CampaignDaypart;
@@ -75,15 +77,18 @@ import com.dms.ptp.entity.Items;
 import com.dms.ptp.entity.PackageAudienceForecast;
 import com.dms.ptp.entity.PackageForecast;
 import com.dms.ptp.entity.Spots;
+import com.dms.ptp.entity.SpotsAudienceForecast;
 import com.dms.ptp.exception.CampaignNotFoundException;
 import com.dms.ptp.exception.InvalidParamException;
 import com.dms.ptp.exception.SalesAreaException;
 import com.dms.ptp.repository.ApprovalKeyRepository;
 import com.dms.ptp.repository.CampaignRepository;
+import com.dms.ptp.repository.ChannelDemoRepository;
 import com.dms.ptp.repository.ItemsRepository;
 import com.dms.ptp.repository.PackageAudienceRepository;
 import com.dms.ptp.repository.PackageRepository;
 import com.dms.ptp.repository.SeedRepository;
+import com.dms.ptp.response.AvailItemLMKResponse;
 import com.dms.ptp.response.AvailLMKResponse;
 import com.dms.ptp.response.CampaignApproveRejectResp;
 import com.dms.ptp.response.CampaignApprovelmkResp;
@@ -132,6 +137,9 @@ public class CampaignServiceImpl implements CampaignService {
     
     @Autowired
 	PackageAudienceRepository packageAudienceRepo;
+    
+    @Autowired
+	ChannelDemoRepository channelDemoRepository;
 
 	/*
 	 * @Autowired WebClient webClient;
@@ -254,7 +262,7 @@ public class CampaignServiceImpl implements CampaignService {
 								
 								item.setApprovalKeyID(uploadCampaignResult.getApprovalKeyID());
 	                            item.setCampaign_code(response.getCampaignCode());
-	                            item.setStatus(response.getMessageSeverity());
+	                            item.setStatus("Not Approved"); //lmk status mapping
 	                            item.setMessage(response.getMessage());
 	                            itemsList.add(item);	
 							}
@@ -294,7 +302,7 @@ public class CampaignServiceImpl implements CampaignService {
 									&& response.getMessageSeverity().equalsIgnoreCase(Constant.ERROR)) {
 								item.setApprovalKeyID(uploadCampaignResult.getApprovalKeyID());
 	                            item.setCampaign_code(response.getCampaignCode());
-	                            item.setStatus(response.getMessageSeverity());
+	                            item.setStatus("Error"); //lmk status mapping
 	                            item.setMessage(response.getMessage());
 	                            itemsList.add(item);	
 							}
@@ -400,7 +408,7 @@ public class CampaignServiceImpl implements CampaignService {
                 pkg.setWeeks(campaignPackage.getWeeks());
                 pkg.setSpot_rate(campaignPackage.getSpot_rate());
                 pkg.setSpots(campaignPackage.getSpots());
-                pkg.setRate(campaignPackage.getRate());
+                pkg.setRate(campaignPackage.getPrice()); //setting price value
                 pkg.setViews(campaignPackage.getViews());
                 pkg.setCpt(campaignPackage.getCpt());
                 pkg.setTvr(campaignPackage.getTvr());
@@ -1214,6 +1222,10 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public AvailLMKResponse getAvailableCherrypicks(AvailLMKRequest availLMKRequest) {
         log.info("Inside CampaignServiceImpl: getAvailableCherrypicks");
+        List<SpotsAudienceForecast> safList = new ArrayList<SpotsAudienceForecast>();
+        
+        int lmkRefNo = channelDemoRepository.findByChannelId(availLMKRequest.getSalesArea());
+        availLMKRequest.setSalesArea(lmkRefNo);
 
         final String url = "https://dmsbookingportaluat.multichoice.co.za/LMKServices/avail";
         // final String url = "http://10.75.23.39:9090/LMKServices/avail";
@@ -1235,6 +1247,31 @@ public class CampaignServiceImpl implements CampaignService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+        
+        if (availLMKResponse != null) {
+			Items items = new Items();
+			Spots spots = new Spots();
+			for (AvailItemLMKResponse pkg : availLMKResponse.getItems()) {
+				/*
+				 * items.setCatalog_id(pkg.); items.setStart(pkg.getStartDate());
+				 * items.setEnd(pkg.getEndDate()); itemsRepository.save(items);
+				 */
+
+				if (pkg.getDemos() != null) {
+					for (TargetMarketValues pkgLMK : pkg.getDemos()) {
+						SpotsAudienceForecast spotAudience = new SpotsAudienceForecast();
+						spotAudience.setCpp(pkgLMK.getCpp());
+						spotAudience.setCpt(pkgLMK.getCpt());
+						spotAudience.setTvr(pkgLMK.getRating());
+						spotAudience.setViews(pkgLMK.getImpact());
+						spotAudience.setDemo_id(pkgLMK.getDemo());
+						
+						safList.add(spotAudience);
+						spots.setDemos(safList);
+					}
+				}
+			}
+		}
 
         return availLMKResponse;
     }
@@ -1367,6 +1404,7 @@ public class CampaignServiceImpl implements CampaignService {
 			throws InvalidParamException {
 		log.info("Inside CampaignServiceImpl: getTargetMarketDetailsPackage");
 		TargetMarketLMKResp response = null;
+		List<PackageAudienceForecast> pafList = new ArrayList<PackageAudienceForecast>();
 
 		if (multipleTargetMarketReq.getTargetMarkets().length == 0) {
 			throw new InvalidParamException("target market list cannot be null or empty");
@@ -1395,7 +1433,6 @@ public class CampaignServiceImpl implements CampaignService {
 						items.setCatalog_id(pkg.getCatalogId());
 						items.setStart(pkg.getStartDate());
 						items.setEnd(pkg.getEndDate());
-						itemsRepository.save(items);
 
 						if (pkg.getDemos() != null) {
 							for (PackageForecastLMK pkgLMK : pkg.getDemos()) {
@@ -1407,8 +1444,10 @@ public class CampaignServiceImpl implements CampaignService {
 								pkgAudience.setDemo_id(pkgLMK.getDemo());
 
 								pkgAudience.setItems(items);
+								pafList.add(pkgAudience);
 
-								packageAudienceRepo.save(pkgAudience);
+								items.setDemos(pafList);
+								itemsRepository.save(items);
 							}
 						}
 					}
@@ -1416,7 +1455,6 @@ public class CampaignServiceImpl implements CampaignService {
 			} catch (Exception e) {
 				response.setMessage(e.getMessage());
 			}
-
 		}
 		return response;
 	}
@@ -1438,5 +1476,19 @@ public class CampaignServiceImpl implements CampaignService {
 			log.error(e.getMessage());
 		}
 		return response;
+	}
+	
+	/**
+	 * This method return the campaign list filter by portal_id,product_code and
+	 * advertiser_code
+	 * 
+	 */
+	@Override
+	public Page<Campaign> getCampaignDetail(Specification t, Pageable p) {
+
+		Page<Campaign> campPage = campaignRepo.findAll(t, p);
+		List<Campaign> campList = campPage.getContent();
+		Page<Campaign> page = new PageImpl(campList, p, 1L);
+		return page;
 	}
 }

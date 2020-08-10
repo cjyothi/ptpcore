@@ -49,4 +49,8 @@ public class CatalogPricing {
     @JoinColumn(name = "pricing_id", referencedColumnName = "id")
     private List<CatalogDaypart> daypart;
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "pricing_id", referencedColumnName = "id")
+    private List<CatalogWeekpart> weekpart;
+
 }
